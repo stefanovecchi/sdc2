@@ -1,0 +1,116 @@
+Appunti su esercizi SDC2
+
+----------- Thread ------------
+
+int pthread_create ( phtread_t* thread,
+const pthread_attr_t* attr, void* (*start_routine)(void*), void* arg):
+
+- thread: puntatore a variabile di tipo pthread_t, su cui verrà memorizzato l’ID del thread creato;
+
+- attr: attributi di creazione ←sempre NULL in questo corso
+
+- start_routine: funzione da eseguire (prende sempre come
+argomento un void* e restituisce un void*);
+
+- arg: puntatore da passare come argomento alla funzione
+  start_routine;
+
+- Return value: 0 in caso di successo, altrimenti la causa dell’errore;
+
+void pthread_exit (void* value_ptr):
+
+- Termina il thread corrente, rendendo disponibile il valore puntato da value_ptr ad una eventuale operazione di join
+
+- All’interno di start_routine, può essere sostituita da return
+
+int pthread_join(phtread_t thread, void** value_ptr):
+
+- Attende esplicitamente la terminazione del thread con ID thread 
+
+- Se value_ptr!=NULL, vi memorizza il valore eventualmente
+restituito dal thread (un void*, tramite pthread_exit)
+
+- Return value: 0 in caso di successo, altrimenti la causa dell’errore
+
+int pthread_detach(phtread_t thread):
+
+- Notifica al sistema che non ci saranno operazioni di join su thread 
+
+- Return value: 0 in caso di successo, altrimenti la causa dell’errore
+
+Se più thread accedono in scrittura ad una variabile condivisa? 
+USIAMO I SEMAFORI:
+
+
+---------------------SEMAFORI----------------------
+
+Esistono due tipi di semafori, i semafori generici e i semafori named:
+
+Iniziamo con i semafori generici:
+
+1)Inizializzazione: semaforo impostato a un valore iniziale non negativo;
+
+2) Operazione samWait: DECREMENTA IL VALORE DEL SEMAFORO, SE IL VALORE È NEGATIVO IL PROCESSO/THREAD VIENE MESSO IN ATTESA IN UNA CODA, ALTRIMENTI VA AVANTI;
+
+3) Operazione semSignal: INCREMENTA IL VALORE DEL SEMAFORO, SE IL VALORE NON È POSITIVO UN PROCESSO/THREAD VIENE RISVEGLIATO DALLA CODA;
+
+#include <semaphore.h>
+
+sem_t sem -> dichiarazione di una variabile di tipo sem_t che rappresenta il nostro semaforo;
+
+sem_init(&sem, pshared, value) -> inizializzazione del semafoto con valore value. Se pshared vale 0, il semaforo viene condiviso tra i thread del processo. In caso di successo, viene ritornato 0; in caso di errore, -1;
+
+sem_wait(&sem) -> operazione semWait (fa -1) sul semafoto sem. In caso di successo 0. In caso di errore, -1;
+
+sem_post(&sem) -> Operazione semSignal sul semafoto semSignal (fa +1). In caso di successo 0, in caso di errore -1;
+
+sem_destroy -> Distrugge il semafoto sem. In caso di successo, viene ritornato 0, in caso di errore, -1;
+
+
+Semafori NAMED:
+
+Per ovviare al problema dei Semafori generici (che permettono di essere sincronizzati inter-processo, ma con tante difficolta(?)) si usano i named-semaphores.
+
+Sono identificati dal loro nome:
+
+- Stringa con terminatore che inizia con uno slash (es. /semaforo);
+- Processi diversi accedono allo stesso semafoto tramite il nome;
+
+Per crearlo si usa:
+
+– sem_t *sem_open(const char *name, int oflag, mode_t mode, unsigned int value);
+
+Dove:
+– Nome del semaforo (stringa con terminatore che inizia con /)
+
+– Flag che controllano la open (definiti in fcntl.h)
+
+	• O_CREAT: il semaforo viene creato se non esiste già
+	• O_CREAT|O_EXCL: se il semaforo già esiste viene lanciato un errore
+	• In caso di creazione, user e group ID del semaforo sono quelli del processo chiamante
+
+– In assenza di flag da specificare, il valore da utilizzare è 0
+
+– Se O_CREAT compare nei flag, vanno specificati altri due parametri......
+
+Il parametro mode specifica i permessi del semaforo:
+Se un altro processo deve usarlo, si può semplicemente aprire con:
+
+– sem_t *sem_open(const char *name, int oflag);
+
+Chiusura:
+
+sem_close chiude il semaforo per il processo corrente, liberando le risorse allocate per esso:
+
+	– argomento: puntatore sem_t* ottenuto da sem_open
+
+Distruzione:
+
+sem_unlink serve a distruggere il semaforo nell’OS;
+
+-------------------------Buffer Circolare su FILE--------------------------
+
+
+
+
+

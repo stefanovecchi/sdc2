@@ -53,7 +53,10 @@ static inline int performRandomTransaction() {
 void* performTransactions(void* x) {
     thread_args_t* args = (thread_args_t*)x;
     printf("Starting producer thread %d\n", args->threadId);
-
+    if(sem_wait(&sem) != 0){
+        fprintf(stderr, "Cannot wait");
+        return NULL;
+    }
     while (args->numOps > 0) {
         // produce the item
         int currentTransaction = performRandomTransaction();
@@ -66,6 +69,11 @@ void* performTransactions(void* x) {
         //printf("P %d\n", args->numOps);
     }
 
+    if(sem_post(&sem) != 0){
+        fprintf(stderr, "Cannot post");
+        return NULL;
+    }
+    
     free(args);
     pthread_exit(NULL);
 }
