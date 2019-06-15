@@ -26,14 +26,17 @@ void initSemaphores() {
 
     /* TODO: create the semaphores as described above */
 
-    sem_filled = NULL;
+    sem_filled = sem_open(SEMNAME_FILLED, O_CREAT|O_EXCL, 0600, 0);
     if (sem_filled == SEM_FAILED) handle_error("sem_open filled");
 
-    sem_empty = NULL;
+    sem_empty = sem_open(SEMNAME_EMPTY, O_CREAT|O_EXCL, 0600, BUFFER_SIZE);
     if (sem_empty == SEM_FAILED) handle_error("sem_open empty");
 
-    sem_cs = NULL;
+    sem_cs = sem_open(SEMNAME_CS, O_CREAT|O_EXCL, 0600, 1);
     if (sem_cs == SEM_FAILED) handle_error("sem_open cs");
+
+    //FUCKING DONE;
+    
 }
 
 void closeSemaphores() {
@@ -43,6 +46,16 @@ void closeSemaphores() {
     /* TODO: implement the operations described above, and handle
      * possible errors using the predefined handle_error() macro */
 
+    if(sem_close(sem_filled) != 0)
+        handle_error("Sem_close failed1");
+
+    if(sem_close(sem_empty)!= 0)
+        handle_error("Sem_close failed2");
+
+    if(sem_close(sem_cs) != 0)
+        handle_error("Sem_close failed3");
+
+    //FUCKING DONE
 
 }
 
@@ -59,6 +72,9 @@ void produce(int id, int numOps) {
     int localSum = 0;
     while (numOps > 0) {
 
+        if(sem_wait(sem_empty) != 0)
+            handle_error("Errore empty wait");
+
         /* Before adding an element to the buffer, we have to check that
          * it is not full by using the semaphore sem_empty.
          * We need also to access to the critical section by enforcing
@@ -67,11 +83,21 @@ void produce(int id, int numOps) {
         /* TODO: implement the operations described above, and handle
          * possible errors using the predefined handle_error() macro */
 
+        if(sem_wait(sem_cs) != 0) //x critical section
+            handle_error("Errore CS wait");
 
         // CRITICAL SECTION
         int value = performRandomTransaction();
         writeToBufferFile(value, BUFFER_SIZE, BUFFER_FILENAME);
         localSum += value;
+
+
+        if(sem_post(sem_cs) != 0) //x critical section
+            handle_error("Errore CS post");
+
+
+        if(sem_post(sem_filled)!= 0)
+            handle_error("Errore fil post");
 
         /* On leaving the critical section we have to "release" the
          * shared resource via sem_cs, and notify the consumer(s) that

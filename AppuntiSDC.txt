@@ -46,6 +46,8 @@ USIAMO I SEMAFORI:
 
 Esistono due tipi di semafori, i semafori generici e i semafori named:
 
+SE MUTUA ESCLUSIONE SEMPRE SEMAFORO SETTATO A 1.
+
 Iniziamo con i semafori generici:
 
 1)Inizializzazione: semaforo impostato a un valore iniziale non negativo;
@@ -110,6 +112,23 @@ sem_unlink serve a distruggere il semaforo nell’OS;
 
 -------------------------Buffer Circolare su FILE--------------------------
 
+
+How it work?
+
+Il file che viene usato come buffer circolare è un file binario, dove gli ultimi 4 byte rappresentano l'indice di scrittura e i penultimi 4 quello di lettura.
+
+Lettura di un int da buffer su File:
+
+Il cursore del file può essere spostato attraverso la funzione:
+
+int fseek ( FILE * stream, long int offset, int origin );
+
+Per effettuare la lettura ci spostiamo prima alla fine del file e leggiamo l'indice di lettura, poi spostiamo il curso a quell'indice e leggiamo il valore che ci interessa.
+
+Una volta fatta la lettura, dobbiamo spostare il cursore verso la fine del file per incrementare l'indice di lettura di sizeof(int) bytes. 
+Dobbiamo sempre effettuare sempre l'incremento. (the same for the scrittura);
+
+Un file è una risorsa critica che può dar luogo a race conditions, va acceduta in mutua esclusione.
 
 
 

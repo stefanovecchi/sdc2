@@ -18,13 +18,13 @@ void openSemaphores() {
 
     /* TODO: open the semaphores as described above */
 
-    sem_filled = NULL;
+    sem_filled = sem_open(SEMNAME_FILLED, 0);
     if (sem_filled == SEM_FAILED) handle_error("sem_open filled");
 
-    sem_empty = NULL;
+    sem_empty = sem_open(SEMNAME_EMPTY, 0);
     if (sem_empty == SEM_FAILED) handle_error("sem_open empty");
 
-    sem_cs = NULL;
+    sem_cs = sem_open(SEMNAME_CS, 0);
     if (sem_cs == SEM_FAILED) handle_error("sem_open cs");
 }
 
@@ -33,11 +33,21 @@ void closeAndDestroySemaphores() {
 
     /* When the program that controls the consumer(s) terminates, we need
      * to close the three semaphores and also delete (unlink) them. */
+    if(sem_close(sem_filled) != 0)
+        handle_error("sem_close not working");
 
-    // TODO: first close them, handling errors using the handle_error() macro
+    
+    if(sem_close(sem_empty) != 0)
+        handle_error("sem_close not working");
 
-    // TODO: then unlink them, handling errors using the handle_error() macro
+    if(sem_close(sem_cs) != 0)
+        handle_error("sem_close not working");
 
+    sem_unlink(SEMNAME_FILLED);
+    sem_unlink(SEMNAME_EMPTY);
+    sem_unlink(SEMNAME_CS);
+
+    //FUCKING DONE
 
 }
 
@@ -54,10 +64,17 @@ void consume(int id, int numOps) {
 
         /* TODO: implement the operations described above, and handle
          * possible errors using the predefined handle_error() macro */
+        if(sem_wait(sem_filled) != 0)
+            handle_error("Error wait filled");
+
+        if(sem_wait(sem_cs) != 0)
+            handle_error("error sem wait on cs");
 
         // CRITICAL SECTION
         int value = readFromBufferFile(BUFFER_SIZE, BUFFER_FILENAME);
         localSum += value;
+
+
 
         /* On leaving the critical section we have to "release" the
          * shared resource via sem_cs, and notify the producer(s) that a
@@ -66,6 +83,11 @@ void consume(int id, int numOps) {
         /* TODO: implement the operations described above, and handle
          * possible errors using the predefined handle_error() macro */
 
+        if(sem_post(sem_cs) != 0)
+            handle_error("error sem wait on cs");
+
+        if(sem_post(sem_empty) != 0)
+            handle_error("error sem post empty");
 
         numOps--;
     }
