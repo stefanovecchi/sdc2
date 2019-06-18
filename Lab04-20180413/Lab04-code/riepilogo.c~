@@ -170,10 +170,10 @@ void childProcess(int child_id) {
 	pthread_t* thread_handlers = malloc(m * sizeof(pthread_t));
 
 	do{
-	int j, ret;
+	int i, ret;
 
 	
-	for(j=0; j<m; j++){
+	for(i=0; i<m; i++){
 		thread_args_t *t_args = (thread_args_t *)malloc(sizeof(thread_args_t));
             t_args->child_id = child_id;
             t_args->thread_id = thread_id++;
@@ -215,7 +215,7 @@ int main(int argc, char **argv) {
 
     semStart = create_named_semaphore(SEMAPHORE_START, O_CREAT|O_EXCL, 0);
 	semFinish = create_named_semaphore(SEMAPHORE_FINISH, O_CREAT|O_EXCL, 0);
-	basta = create_named_semaphore(SEMAPHORE_BASTA, O_CREAT|O_EXCL, 0);
+	basta = create_named_semaphore(SEMAPHORE_BASTA, 0_CREAT|O_EXCL, 0);
     int ret, count; //count serve per contare se sono stati creati tutti i  processi figli;
 
     int i;
